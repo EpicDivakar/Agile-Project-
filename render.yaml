@@ -1,0 +1,32 @@
+# Render Blueprint for Student Setu
+# Commit this file at the repo root, then in Render: New > Blueprint > pick this repo.
+
+services:
+  - type: web
+    name: student-setu
+    runtime: node
+    region: singapore          # closest to India; also: oregon, ohio, virginia, frankfurt
+    plan: starter              # REQUIRED for the disk below. Use "free" to drop the disk.
+    branch: main
+
+    # --include=dev is needed: vite and tsc are devDependencies and the build uses them.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+
+    healthCheckPath: /
+
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NVIDIA_API_KEY
+        sync: false            # set this by hand in the Render dashboard, never in git
+      - key: NVIDIA_MODEL
+        value: nvidia/nemotron-3.5-super-vl-120b-a12b
+      # PORT is injected by Render automatically; server/index.ts already reads it.
+
+    # Mounting the disk directly at server/data means db.json survives deploys
+    # and restarts with no change to server/db.ts.
+    disk:
+      name: setu-data
+      mountPath: /opt/render/project/src/server/data
+      sizeGB: 1
